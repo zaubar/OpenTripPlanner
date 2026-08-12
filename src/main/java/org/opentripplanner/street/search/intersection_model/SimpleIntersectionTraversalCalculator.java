@@ -116,8 +116,21 @@ public class SimpleIntersectionTraversalCalculator
    * so it's reasonable on average until we have implemented some logic for combining these traffic
    * lights in intersections.
    **/
-  public double getExpectedWalkingAndCyclingTrafficLightTimeSec() {
+  public double getExpectedCyclingTrafficLightTimeSec() {
     return 15;
+  }
+
+  /**
+   * Time cost applied when a pedestrian crosses at a signal-controlled intersection.
+   * <p>
+   * Lower than the cycling case above, deliberately not zero: this value feeds both path-
+   * selection cost AND the duration reported to the user, so 0 would understate real walk time
+   * (a red light does take time) while still discouraging the signalized crossing as much as the
+   * shared 15s constant did. 5s is a compromise -- it meaningfully reduces the bias against
+   * signalized crossings relative to uncontrolled ones without asserting a wait is free.
+   **/
+  public double getExpectedWalkingTrafficLightTimeSec() {
+    return 5;
   }
 
   /**
@@ -189,7 +202,7 @@ public class SimpleIntersectionTraversalCalculator
     final var baseDuration = computeNonDrivingTraversalDuration(from, to, toSpeed);
 
     if (v.hasCyclingTrafficLight()) {
-      return baseDuration + getExpectedWalkingAndCyclingTrafficLightTimeSec();
+      return baseDuration + getExpectedCyclingTrafficLightTimeSec();
     } else if (isTurnAcrossTraffic(turnAngle)) {
       return baseDuration * getAcrossTrafficBicycleTurnMultiplier();
     } else if (isSafeTurn(turnAngle)) {
@@ -207,7 +220,7 @@ public class SimpleIntersectionTraversalCalculator
   ) {
     final var baseDuration = computeNonDrivingTraversalDuration(from, to, toSpeed);
     return v.hasWalkingTrafficLight()
-      ? getExpectedWalkingAndCyclingTrafficLightTimeSec() + baseDuration
+      ? getExpectedWalkingTrafficLightTimeSec() + baseDuration
       : baseDuration;
   }
 
